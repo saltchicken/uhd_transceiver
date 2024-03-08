@@ -25,6 +25,7 @@ class Transceiver():
         self.rx_gain = args.rx_gain
         
         self.remote = args.remote
+        self.rx_port = args.rx_port
         
         self.usrp = uhd.usrp.MultiUSRP()
         self.stream_args = uhd.usrp.StreamArgs("fc32", "sc16")
@@ -89,7 +90,7 @@ class RX_Node(threading.Thread):
         self.kill_rx = threading.Event()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind(('0.0.0.0', 12345)) if receiver.remote else self.server_socket.bind(('localhost', 12345))
+        self.server_socket.bind(('0.0.0.0', receiver.rx_port)) if receiver.remote else self.server_socket.bind(('localhost', receiver.rx_port))
         self.server_socket.listen(1)
 
         logger.info("Waiting for a connection...")
@@ -130,13 +131,11 @@ def main():
     parser.add_argument('--rx_gain', type=int, required=True, help="Gain for RX. Example: 20")
     parser.add_argument('--verbose', '-v', action='store_true', help="Enable verbose mode")
     parser.add_argument('--remote', '-r', action='store_true', help="Enable remote access")
+    parser.add_argument('--rx_port', type=int, default=12345, help="Server port for RX Node")
     args = parser.parse_args()
 
     logger.remove()
-    if args.verbose:
-        logger.add(sys.stderr, level="DEBUG")
-    else:
-        logger.add(sys.stderr, level="INFO")
+    logger.add(sys.stderr, level="DEBUG") if args.verbose else logger.add(sys.stderr, level="INFO")
     
     transceiver = Transceiver(args)
     embed(quiet=True)
