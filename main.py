@@ -97,10 +97,10 @@ class TX_Node(threading.Thread):
     
 class RX_Node(threading.Thread):
     # TODO: Add static typing
-    def __init__(self, receiver, kill_rx):
+    def __init__(self, receiver):
         threading.Thread.__init__(self)
         self.receiver = receiver
-        self.kill_rx = kill_rx
+        self.kill_rx = threading.Event()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(('localhost', 12345))  # Bind to localhost on port 12345
         self.server_socket.listen(1)
