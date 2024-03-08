@@ -114,18 +114,18 @@ class RX_Node(threading.Thread):
         total_sent = 0
         
         self.conn.setblocking(False)
-        try:
-            while not self.kill_rx.is_set():
-                # TODO: Does this need to make a copy via np.copy()
-                data = self.receiver.read()
-                data_bytes = data.tobytes()  # Convert the numpy array to bytes
-                # print(len(data_bytes))
-                self.conn.sendall(data_bytes)  # Send the data to the client
-                total_sent += 64000
-        except:
-            print(f"Total sent: {total_sent}")
-            self.conn.close()
-            print('Conn closed')
+        while not self.kill_rx.is_set():
+        
+            # TODO: Does this need to make a copy via np.copy()
+            data = self.receiver.read()
+            data_bytes = data.tobytes()  # Convert the numpy array to bytes
+            # print(len(data_bytes))
+            self.conn.sendall(data_bytes)  # Send the data to the client
+            total_sent += 64000
+
+        print(f"Total sent: {total_sent}")
+        self.conn.close()
+        print('Conn closed')
     
     def stop(self):
         print('stopping process')
