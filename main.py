@@ -97,9 +97,10 @@ class TX_Node(threading.Thread):
     
 class RX_Node(threading.Thread):
     # TODO: Add static typing
-    def __init__(self, receiver):
+    def __init__(self, receiver, kill_rx):
         threading.Thread.__init__(self)
         self.receiver = receiver
+        self.kill_rx = kill_rx
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(('localhost', 12345))  # Bind to localhost on port 12345
         self.server_socket.listen(1)
@@ -114,16 +115,22 @@ class RX_Node(threading.Thread):
         
         self.conn.setblocking(False)
         try:
-            while True:
+            while not self.kill_rx.is_set():
                 # TODO: Does this need to make a copy via np.copy()
                 data = self.receiver.read()
                 data_bytes = data.tobytes()  # Convert the numpy array to bytes
-                print(len(data_bytes))
+                # print(len(data_bytes))
                 self.conn.sendall(data_bytes)  # Send the data to the client
                 total_sent += 64000
         except:
             print(f"Total sent: {total_sent}")
             self.conn.close()
+            print('Conn closed')
+    
+    def stop(self):
+        print('stopping process')
+        self.kill_rx.set()
+        
     
 def main():
     parser = argparse.ArgumentParser(description="A simple script to demonstrate argument parsing.")
