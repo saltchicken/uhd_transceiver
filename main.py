@@ -119,8 +119,11 @@ class RX_Node(threading.Thread):
             # TODO: Does this need to make a copy via np.copy()
             data = self.receiver.read()
             data_bytes = data.tobytes()  # Convert the numpy array to bytes
-            # print(len(data_bytes))
-            self.conn.sendall(data_bytes)  # Send the data to the client
+            # print(len(data_bytes))'
+            try:
+                self.conn.sendall(data_bytes)  # Send the data to the client
+            except:
+                logger.warning('Overrun')
             total_sent += 64000
 
         print(f"Total sent: {total_sent}")
