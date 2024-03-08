@@ -12,10 +12,13 @@ def receive_data(sock):
             # data = np.frombuffer(data_bytes)
             if not data_bytes:
                 break
-            data = np.frombuffer(data_bytes, dtype=np.complex64)  # Convert received bytes to numpy array
-            print(data.shape)
-            print("Received:", data)
-            total_received += 64000
+            if len(data_bytes) == 512000:
+                data = np.frombuffer(data_bytes, dtype=np.complex64)  # Convert received bytes to numpy array
+                print(data.shape)
+                print("Received:", data)
+                total_received += 64000
+            else:
+                print(len(data_bytes))
             time.sleep(0.031)
     finally:
         print(total_received)
