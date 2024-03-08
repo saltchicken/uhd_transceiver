@@ -129,7 +129,8 @@ class RX_Node(threading.Thread):
 
         print(f"Total sent: {total_sent}")
         self.conn.close()
-        print('Conn closed')
+        self.server_socket.close()
+        print('Conn and socket closed')
     
     def stop(self):
         print('stopping process')
