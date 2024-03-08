@@ -105,7 +105,7 @@ class RX_Node(threading.Thread):
         self.kill_rx = threading.Event()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if self.remote:
+        if receiver.remote:
             self.server_socket.bind(('0.0.0.0', 12345))
         else:
             self.server_socket.bind(('localhost', 12345))

@@ -25,7 +25,8 @@ def receive_data(sock):
         sock.close()
 
 def main():
-    server_address = ('localhost', 12345)  # Server address and port
+    # server_address = ('localhost', 12345)  # Server address and port
+    server_address = ('192.168.1.11', 12345)  # Server address and port
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
