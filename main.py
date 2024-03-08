@@ -24,6 +24,8 @@ class Transceiver():
         # self.rx_antenna = args.rx_antenna
         self.rx_gain = args.rx_gain
         
+        self.remote = args.remote
+        
         
         self.usrp = uhd.usrp.MultiUSRP()
         self.stream_args = uhd.usrp.StreamArgs("fc32", "sc16")
@@ -103,7 +105,10 @@ class RX_Node(threading.Thread):
         self.kill_rx = threading.Event()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind(('localhost', 12345))  # Bind to localhost on port 12345
+        if self.remote:
+            self.server_socket.bind(('0.0.0.0', 12345))
+        else:
+            self.server_socket.bind(('localhost', 12345))
         self.server_socket.listen(1)
 
         print("Waiting for a connection...")
@@ -153,6 +158,7 @@ def main():
     # parser.add_argument('--rx_antenna', type=str, required=True, help="")
     parser.add_argument('--rx_gain', type=int, required=True, help="Gain for RX. Example: 20")
     parser.add_argument('--verbose', '-v', action='store_true', help="Enable verbose mode")
+    parser.add_argument('--remote', '-r', action='store_true', help="Enable remote access")
     args = parser.parse_args()
 
     logger.remove()
