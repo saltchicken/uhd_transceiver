@@ -32,9 +32,9 @@ def receive_data(sock):
                 print(f"Goofed {len(data_bytes)}")
             time.sleep(0.010)
     except RuntimeError as e:
-        print('Socket closed')
+        logger.debug('Socket closed')
     finally:
-        print(f"Total Received: {total_received}")
+        logger.debug(f"Total Received: {total_received}")
         sock.close()
 
 def main():
