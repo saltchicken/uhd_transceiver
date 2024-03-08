@@ -124,6 +124,7 @@ class RX_Node(threading.Thread):
                 self.conn.sendall(data_bytes)  # Send the data to the client
             except:
                 logger.warning('Overrun')
+                self.kill_rx.set()
             total_sent += 64000
 
         print(f"Total sent: {total_sent}")
