@@ -102,6 +102,7 @@ class RX_Node(threading.Thread):
         self.receiver = receiver
         self.kill_rx = threading.Event()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind(('localhost', 12345))  # Bind to localhost on port 12345
         self.server_socket.listen(1)
 
