@@ -1,4 +1,6 @@
 import argparse
+import socket
+import threading
 import numpy as np
 import sys
 
@@ -75,7 +77,51 @@ class Transceiver():
     def send(self, data):
         samps_sent = self.tx_streamer.send(data, self.tx_metadata)
         
+    def start_rx_node(self):
+        self.rx_node = RX_Node(self)
+        self.rx_node.start()
+    
+    def stop_rx_node(self):
+        self.rx_node.stop()
         
+        
+class TX_Node(threading.Thread):
+    def __init__(self):
+        pass
+    
+    def run(self):
+        pass
+        
+    
+class RX_Node(threading.Thread):
+    # TODO: Add static typing
+    def __init__(self, receiver):
+        self.receiver = receiver
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind(('localhost', 12345))  # Bind to localhost on port 12345
+        self.server_socket.listen(1)
+
+        print("Waiting for a connection...")
+        self.conn, addr = self.server_socket.accept()
+        print("Connected to:", addr)
+    
+    def run(self):
+        """Send continuous stream of data."""
+        total_sent = 0
+        
+        self.conn.setblocking(False)
+        try:
+            while True:
+                # TODO: Does this need to make a copy via np.copy()
+                data = self.receiver.read()
+                data_bytes = data.tobytes()  # Convert the numpy array to bytes
+                print(len(data_bytes))
+                self.conn.sendall(data_bytes)  # Send the data to the client
+                total_sent += 64000
+        except:
+            print(f"Total sent: {total_sent}")
+            self.conn.close()
+    
 def main():
     parser = argparse.ArgumentParser(description="A simple script to demonstrate argument parsing.")
     parser.add_argument('--tx_sample_rate', type=float, required=True, help="Sample rate for TX (Hz). Example: 2e6")
