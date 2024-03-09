@@ -20,7 +20,7 @@ def recv_all(sock, buffer_size):
 class UHD_Client():
     def __init__(self, sock):
         self.sock = sock
-        self.segment = b''
+        self.segment = []
         
     def receive_data(self):
         """Receive continuous stream of data."""
@@ -38,12 +38,11 @@ class UHD_Client():
         finally:
             logger.debug(f"Total Received: {total_received}")
             self.sock.close()
-            numpy_segment = np.frombuffer(self.segment, dtype=np.complex64)
-            numpy_segment.tofile('test.bin')
+            result = np.concatenate(self.segment)
             
     def data_handler(self, data_bytes):
-        # data = np.frombuffer(data_bytes, dtype=np.complex64)
-        self.segment += data_bytes
+        data = np.frombuffer(data_bytes, dtype=np.complex64)
+        self.segment.append(data)
     
 
 def main():
