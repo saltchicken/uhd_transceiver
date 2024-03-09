@@ -103,9 +103,11 @@ class RX_Node(threading.Thread):
         stream_cmd.stream_now = True
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
         total_sent = 0
+        test_result = []
         # self.conn.setblocking(False)
         while not self.kill_rx.is_set():
             data = self.receiver.read()
+            test_result.append(data)
             data_bytes = data.tobytes()
             self.conn.sendall(data_bytes)
             total_sent += len(data_bytes)
@@ -115,6 +117,9 @@ class RX_Node(threading.Thread):
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
         self.conn.close()
         self.server_socket.close()
+        
+        test = np.concatenate(test_result)
+        test.tofile('test3.bin')
         logger.debug('Conn and socket closed')
     
     def stop(self):
