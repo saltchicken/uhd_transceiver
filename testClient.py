@@ -11,34 +11,35 @@ from numpysocket import NumpySocket
 
 class UHD_Client():
     def __init__(self, remote, port):
-        server_address = (remote, port) if remote else ('localhost', port)
-        self.sock = NumpySocket()
-        try:
-            self.sock.connect(server_address)
-        except ConnectionRefusedError:
-            logger.warning("Connection refused. Make sure the server is running.")
+        self.server_address = (remote, port) if remote else ('localhost', port)
         self.segment = []
         self.receive_data()
         
     def receive_data(self):
         """Receive continuous stream of data."""
-        try:
-            while True:
-                data = self.sock.recv()
-                if len(data) == 0:
-                    logger.warning(f"data returned with len 0. Breaking receive loop")
-                    break
-                self.data_handler(data)
-        except RuntimeError as e:
-            print(e)
-        except KeyboardInterrupt:
-            logger.warning("Client interrupted. Exiting...")
-        finally:
-            logger.debug('Socket closed')
-            self.sock.close()
-            result = np.concatenate(self.segment)
-            result.tofile("received_samples.bin")
-            logger.debug(f"{len(result)} samples writtien to received_samples.bin")
+        
+        with NumpySocket() as sock:
+            try:
+                sock.connect(self.server_address)
+            except ConnectionRefusedError:
+                logger.warning("Connection refused. Make sure the server is running.")
+            try:
+                while True:
+                    data = sock.recv()
+                    if len(data) == 0:
+                        logger.warning(f"data returned with len 0. Breaking receive loop")
+                        break
+                    self.data_handler(data)
+            except RuntimeError as e:
+                print(e)
+            except KeyboardInterrupt:
+                logger.warning("Client interrupted. Exiting...")
+            finally:
+                result = np.concatenate(self.segment)
+                result.tofile("received_samples.bin")
+                logger.debug(f"{len(result)} samples writtien to received_samples.bin")
+        
+        logger.debug('Socket closed')
             
     def data_handler(self, data):
         self.segment.append(data)
