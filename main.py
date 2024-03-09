@@ -110,26 +110,26 @@ class RX_Node(threading.Thread):
         stream_cmd.stream_now = True
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
         total_sent = 0
-        # test_result = []
+        test_result = []
         # self.conn.setblocking(False)
         while not self.kill_rx.is_set():
             data = self.receiver.read()
             # logger.info(data[0:10])
-            sent_bytes = self.conn.sendall(data)
-            logger.info(sent_bytes)
-            # test_result.append(data)
+            self.conn.sendall(data)
+            # logger.info(sent_bytes)
+            test_result.append(data)
             # data_bytes = data.tobytes()
             # self.conn.sendall(data_bytes)
             # total_sent += len(data_bytes)
 
-        logger.debug(f"Total sent: {total_sent}")
+        # logger.debug(f"Total sent: {total_sent}")
         stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.stop_cont)
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
         self.conn.close()
         self.server_socket.close()
         
-        # test = np.concatenate(test_result)
-        # test.tofile('test3.bin')
+        test = np.concatenate(test_result)
+        test.tofile('test3.bin')
         logger.debug('Conn and socket closed')
     
     def stop(self):
