@@ -109,29 +109,24 @@ class RX_Node(threading.Thread):
         # stream_cmd.time_spec = uhd.types.TimeSpec(self.usrp.get_time_now().get_real_secs() + INIT_DELAY)
         stream_cmd.stream_now = True
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
-        total_sent = 0
-        test_result = []
-        # self.conn.setblocking(False)
+        sent_packets = []
+        
         while not self.kill_rx.is_set():
             data = self.receiver.read()
-            # logger.info(data[-10:])
-            logger.info(data.shape)
             self.conn.sendall(data)
-            # logger.info(sent_bytes)
-            test_result.append(np.copy(data))
-            # data_bytes = data.tobytes()
-            # self.conn.sendall(data_bytes)
-            # total_sent += len(data_bytes)
-
-        # logger.debug(f"Total sent: {total_sent}")
+            sent_packets.append(np.copy(data))
+        
         stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.stop_cont)
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
         self.conn.close()
         self.server_socket.close()
-        
-        test = np.concatenate(test_result)
-        test.tofile('test4.bin')
         logger.debug('Conn and socket closed')
+        
+        sent_samples = np.concatenate(sent_packets)
+        logger.debug(f"Total sent: {len(sent_samples)}")
+        sent_samples.tofile('sent_samples.bin')
+        logger.debug(f"{len(sent_samples)} written to sent_samples.bin")
+        
     
     def stop(self):
         self.kill_rx.set()
