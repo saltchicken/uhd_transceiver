@@ -33,7 +33,7 @@ class UHD_Client():
                 data = self.sock.recv()
                 if len(data) == 0:
                     break
-                # logger.info(data[0][0:10])
+                logger.info(data[0][-10:])
                 # if not data_bytes:
                 #     logger.error("recv_all returned None")
                 #     break

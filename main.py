@@ -114,7 +114,7 @@ class RX_Node(threading.Thread):
         # self.conn.setblocking(False)
         while not self.kill_rx.is_set():
             data = self.receiver.read()
-            # logger.info(data[0:10])
+            logger.info(data[-10:])
             self.conn.sendall(data)
             # logger.info(sent_bytes)
             test_result.append(data)
