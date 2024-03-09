@@ -93,6 +93,7 @@ class RX_Node(threading.Thread):
         # self.server_socket.listen(1)
         
         self.server_socket = NumpySocket()
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind(('0.0.0.0', receiver.rx_port))
         self.server_socket.listen()
 
