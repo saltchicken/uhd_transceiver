@@ -50,9 +50,9 @@ class Transceiver():
         
         
         self.buffer_size = 2000
-        self.recv_buffer = np.zeros(self.buffer_size, np.complex64)
+        self.recv_buffer = np.zeros((1, self.buffer_size), np.complex64)
         self.num_samps = 64000
-        self.samples = np.zeros((1, 64000), dtype=np.complex64)
+        self.samples = np.zeros(64000, dtype=np.complex64)
         
     def read(self):
         for i in range(self.num_samps//self.buffer_size):
