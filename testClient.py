@@ -9,47 +9,38 @@ from loguru import logger
 from numpysocket import NumpySocket
 
 
-def recv_all(sock, buffer_size):
-    data = b''
-    while len(data) < buffer_size:
-        packet = sock.recv(buffer_size - len(data))
-        if not packet:
-            # Handle case where connection is closed prematurely
-            raise RuntimeError("Socket connection closed prematurely")
-        data += packet
-    return data
-
 class UHD_Client():
-    def __init__(self, sock):
-        self.sock = sock
+    def __init__(self, remote, port):
+        server_address = (remote, port) if remote else ('localhost', port)
+        self.sock = NumpySocket()
+        try:
+            self.sock.connect(server_address)
+        except ConnectionRefusedError:
+            logger.warning("Connection refused. Make sure the server is running.")
         self.segment = []
+        self.receive_data()
         
     def receive_data(self):
         """Receive continuous stream of data."""
-        total_received = 0
         try:
             while True:
-                # data_bytes = recv_all(self.sock, 512000)
                 data = self.sock.recv()
                 if len(data) == 0:
+                    logger.warning(f"data returned with len 0. Breaking receive loop")
                     break
-                logger.info(data.shape)
-                # if not data_bytes:
-                #     logger.error("recv_all returned None")
-                #     break
-                # total_received += len(data_bytes)
-                # self.data_handler(data_bytes)
                 self.data_handler(data)
         except RuntimeError as e:
             logger.debug('Socket closed')
+        except KeyboardInterrupt:
+            logger.warning("Client interrupted. Exiting...")
         finally:
-            logger.debug(f"Total Received: {total_received}")
+            logger.debug('Socket closed')
             self.sock.close()
             result = np.concatenate(self.segment)
-            result.tofile('final.bin')
+            result.tofile("received_samples.bin")
+            logger.debug(f"{len(result)} samples writtien to received_samples.bin")
             
     def data_handler(self, data):
-        # data = np.frombuffer(data_bytes, dtype=np.complex64)
         self.segment.append(data)
     
 
@@ -63,22 +54,12 @@ def main():
     logger.remove()
     logger.add(sys.stderr, level="DEBUG") if args.verbose else logger.add(sys.stderr, level="INFO")
     
-    #   # Server address and port
-    server_address = (args.remote, args.port) if args.remote else ('localhost', args.port)
-    # client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket = NumpySocket()
     
-    client = UHD_Client(client_socket)
+    
+    client = UHD_Client(args.remote, args.port)
 
-    try:
-        client_socket.connect(server_address)
-        client.receive_data()
-    except ConnectionRefusedError:
-        print("Connection refused. Make sure the server is running.")
-    except KeyboardInterrupt:
-        print("Client interrupted. Exiting...")
-    finally:
-        client_socket.close()
+    
+
 
 if __name__ == "__main__":
     main()

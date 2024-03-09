@@ -1,5 +1,3 @@
-test.bin
-test2.bin
-test3.bin
-final.bin
 checkfiles.py
+sent_samples.bin
+received_samples.bin
