@@ -31,7 +31,7 @@ class UHD_Client():
                 if not data_bytes:
                     logger.error("recv_all returned None")
                     break
-                total_received += len(data_bytes) // 8
+                total_received += len(data_bytes)
                 self.data_handler(data_bytes)
         except RuntimeError as e:
             logger.debug('Socket closed')
