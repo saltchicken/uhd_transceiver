@@ -62,7 +62,7 @@ class Transceiver():
         # if not self.rx_metadata.error_code == uhd.types.RXMetadataErrorCode.none:
         #     logger.warning(self.rx_metadata.error_code)
             
-        result = np.copy(self.samples)
+        result = np.copy(self.recv_buffer)
         return result
         
     def send(self, data):
