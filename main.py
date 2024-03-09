@@ -104,8 +104,10 @@ class RX_Node(threading.Thread):
         # self.conn.setblocking(False)
         while not self.kill_rx.is_set():      
             # TODO: Does this need to make a copy via np.copy()
-            data = np.copy(self.receiver.read())
-            data_bytes = data.tobytes()
+            data = self.receiver.read()
+            # data_bytes = data.tobytes()
+            data_bytes = data.tostring()
+            logger.info(len(data_bytes))
             self.conn.sendall(data_bytes)
             test_result += data_bytes
             total_sent += 64000
