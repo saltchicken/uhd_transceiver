@@ -118,7 +118,7 @@ class RX_Node(threading.Thread):
             logger.info(data.shape)
             self.conn.sendall(data)
             # logger.info(sent_bytes)
-            test_result.append(data)
+            test_result.append(np.copy(data))
             # data_bytes = data.tobytes()
             # self.conn.sendall(data_bytes)
             # total_sent += len(data_bytes)
@@ -130,7 +130,7 @@ class RX_Node(threading.Thread):
         self.server_socket.close()
         
         test = np.concatenate(test_result)
-        test.tofile('test3.bin')
+        test.tofile('test4.bin')
         logger.debug('Conn and socket closed')
     
     def stop(self):
