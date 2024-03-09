@@ -31,7 +31,7 @@ class UHD_Client():
             while True:
                 # data_bytes = recv_all(self.sock, 512000)
                 data = self.sock.recv()
-                logger.info(len(data))
+                logger.info(data[0][0:10])
                 # if not data_bytes:
                 #     logger.error("recv_all returned None")
                 #     break
