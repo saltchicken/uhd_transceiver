@@ -100,17 +100,22 @@ class RX_Node(threading.Thread):
     def run(self):
         """Send continuous stream of data."""
         total_sent = 0
+        test_result = b''
         # self.conn.setblocking(False)
         while not self.kill_rx.is_set():      
             # TODO: Does this need to make a copy via np.copy()
             data = np.copy(self.receiver.read())
             data_bytes = data.tobytes()
             self.conn.sendall(data_bytes)
+            test_result += data_bytes
             total_sent += 64000
 
         logger.debug(f"Total sent: {total_sent}")
         self.conn.close()
         self.server_socket.close()
+        
+        test = np.frombuffer(test_result, np.complex64)
+        test.tofile('test2.bin')
         logger.debug('Conn and socket closed')
     
     def stop(self):
