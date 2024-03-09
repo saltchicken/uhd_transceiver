@@ -45,10 +45,7 @@ class Transceiver():
         self.rx_metadata = uhd.types.RXMetadata()
         self.rx_streamer = self.usrp.get_rx_stream(st_args)
 
-        stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.start_cont)
-        INIT_DELAY = 0.05
-        stream_cmd.time_spec = uhd.types.TimeSpec(self.usrp.get_time_now().get_real_secs() + INIT_DELAY)
-        self.rx_streamer.issue_stream_cmd(stream_cmd)
+        
         
         self.buffer_size = 2000
         self.recv_buffer = np.zeros(self.buffer_size, np.complex64)
@@ -56,14 +53,12 @@ class Transceiver():
         self.samples = np.zeros((1, 64000), dtype=np.complex64)
         
     def read(self):
-        # for i in range(self.num_samps//self.buffer_size):
-        self.rx_streamer.recv(self.recv_buffer, self.rx_metadata)
-            # self.samples[i*1000:(i+1)*1000] = self.recv_buffer[0]
-        # if not self.rx_metadata.error_code == uhd.types.RXMetadataErrorCode.none:
-        #     logger.warning(self.rx_metadata.error_code)
-            
-        result = np.copy(self.recv_buffer)
-        return result
+        for i in range(self.num_samps//self.buffer_size):
+            self.rx_streamer.recv(self.recv_buffer, self.rx_metadata)
+            self.samples[i*1000:(i+1)*1000] = np.copy(self.recv_buffer[0])
+        if not self.rx_metadata.error_code == uhd.types.RXMetadataErrorCode.none:
+            logger.warning(self.rx_metadata.error_code)
+        return self.samples
         
     def send(self, data):
         samps_sent = self.tx_streamer.send(data, self.tx_metadata)
@@ -101,6 +96,13 @@ class RX_Node(threading.Thread):
     
     def run(self):
         """Send continuous stream of data."""
+        
+        stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.start_cont)
+        # INIT_DELAY = 0.05
+        # stream_cmd.time_spec = uhd.types.TimeSpec(self.usrp.get_time_now().get_real_secs() + INIT_DELAY)
+        stream_cmd.stream_now = True
+        self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
+        
         total_sent = 0
         result = []
         # self.conn.setblocking(False)
@@ -115,6 +117,8 @@ class RX_Node(threading.Thread):
             total_sent += 64000
 
         logger.debug(f"Total sent: {total_sent}")
+        stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.stop_cont)
+        self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
         self.conn.close()
         self.server_socket.close()
         
