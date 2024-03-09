@@ -56,11 +56,11 @@ class Transceiver():
         self.samples = np.zeros(64000, dtype=np.complex64)
         
     def read(self):
-        for i in range(self.num_samps//self.buffer_size):
-            self.rx_streamer.recv(self.recv_buffer, self.rx_metadata)
-            self.samples[i*1000:(i+1)*1000] = self.recv_buffer[0]
-        if not self.rx_metadata.error_code == uhd.types.RXMetadataErrorCode.none:
-            logger.warning(self.rx_metadata.error_code)
+        # for i in range(self.num_samps//self.buffer_size):
+        self.rx_streamer.recv(self.recv_buffer, self.rx_metadata)
+            # self.samples[i*1000:(i+1)*1000] = self.recv_buffer[0]
+        # if not self.rx_metadata.error_code == uhd.types.RXMetadataErrorCode.none:
+        #     logger.warning(self.rx_metadata.error_code)
             
         result = np.copy(self.samples)
         return result
