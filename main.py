@@ -110,7 +110,6 @@ class RX_Node(threading.Thread):
             data_bytes = data.tostring()
             logger.info(len(data_bytes))
             self.conn.sendall(data_bytes)
-            test_result += data_bytes
             total_sent += 64000
 
         logger.debug(f"Total sent: {total_sent}")
