@@ -30,7 +30,7 @@ class UHD_Client():
                     break
                 self.data_handler(data)
         except RuntimeError as e:
-            logger.debug('Socket closed')
+            print(e)
         except KeyboardInterrupt:
             logger.warning("Client interrupted. Exiting...")
         finally:
