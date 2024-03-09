@@ -113,7 +113,11 @@ class RX_Node(threading.Thread):
         
         while not self.kill_rx.is_set():
             data = self.receiver.read()
-            self.conn.sendall(data)
+            try:
+                self.conn.sendall(data)
+            except ConnectionResetError:
+                logger.warning('Connection reset by client')
+                break
             sent_packets.append(np.copy(data))
         
         stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.stop_cont)
