@@ -6,6 +6,7 @@ import numpy as np
 
 from loguru import logger
 
+
 def recv_all(sock, buffer_size):
     data = b''
     while len(data) < buffer_size:
@@ -16,26 +17,34 @@ def recv_all(sock, buffer_size):
         data += packet
     return data
 
-def receive_data(sock):
-    """Receive continuous stream of data."""
-    total_received = 0
-    try:
-        while True:
-            data_bytes = recv_all(sock, 512000)  # Receive data from the server
-            # data_bytes = sock.recv(512000)
-            if not data_bytes:
-                break
-            if len(data_bytes) == 512000:
-                data = np.frombuffer(data_bytes, dtype=np.complex64)  # Convert received bytes to numpy array
-                total_received += 64000
-            else:
-                print(f"Goofed {len(data_bytes)}")
-            time.sleep(0.010)
-    except RuntimeError as e:
-        logger.debug('Socket closed')
-    finally:
-        logger.debug(f"Total Received: {total_received}")
-        sock.close()
+class UHD_Client():
+    def __init__(self, sock):
+        self.sock = sock
+        self.segment = b''
+        
+    def receive_data(self):
+        """Receive continuous stream of data."""
+        total_received = 0
+        try:
+            while True:
+                data_bytes = recv_all(self.sock, 512000)
+                if not data_bytes:
+                    logger.error("recv_all returned None")
+                    break
+                total_received += len(data_bytes) // 8
+                self.data_handler(data_bytes)
+        except RuntimeError as e:
+            logger.debug('Socket closed')
+        finally:
+            logger.debug(f"Total Received: {total_received}")
+            self.sock.close()
+            numpy_segment = np.frombuffer(self.segment, dtype=np.complex64)
+            numpy_segment.tofile('test.bin')
+            
+    def data_handler(self, data_bytes):
+        # data = np.frombuffer(data_bytes, dtype=np.complex64)
+        self.segment += data_bytes
+    
 
 def main():
     parser = argparse.ArgumentParser(description="Arguments for setting up client of UHD_Transceiver")
@@ -50,10 +59,12 @@ def main():
     #   # Server address and port
     server_address = (args.remote, args.port) if args.remote else ('localhost', args.port)
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    client = UHD_Client(client_socket)
 
     try:
         client_socket.connect(server_address)
-        receive_data(client_socket)  # Receive data continuously
+        client.receive_data()
     except ConnectionRefusedError:
         print("Connection refused. Make sure the server is running.")
     except KeyboardInterrupt:
