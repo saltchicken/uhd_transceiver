@@ -115,7 +115,7 @@ class RX_Node(threading.Thread):
         self.server_socket.close()
         logger.debug('Conn and socket closed')
         final_segment = np.frombuffer(result_segment, np.complex64)
-        result_segment.tofile('trial.bin')
+        final_segment.tofile('trial.bin')
     
     def stop(self):
         self.kill_rx.set()
