@@ -6,6 +6,8 @@ import numpy as np
 
 from loguru import logger
 
+from numpysocket import NumpySocket
+
 
 def recv_all(sock, buffer_size):
     data = b''
@@ -27,12 +29,14 @@ class UHD_Client():
         total_received = 0
         try:
             while True:
-                data_bytes = recv_all(self.sock, 512000)
-                if not data_bytes:
-                    logger.error("recv_all returned None")
-                    break
-                total_received += len(data_bytes)
-                self.data_handler(data_bytes)
+                # data_bytes = recv_all(self.sock, 512000)
+                data = self.sock.recv()
+                # if not data_bytes:
+                #     logger.error("recv_all returned None")
+                #     break
+                # total_received += len(data_bytes)
+                # self.data_handler(data_bytes)
+                self.data_handler(data)
         except RuntimeError as e:
             logger.debug('Socket closed')
         finally:
@@ -40,8 +44,8 @@ class UHD_Client():
             self.sock.close()
             result = np.concatenate(self.segment)
             
-    def data_handler(self, data_bytes):
-        data = np.frombuffer(data_bytes, dtype=np.complex64)
+    def data_handler(self, data):
+        # data = np.frombuffer(data_bytes, dtype=np.complex64)
         self.segment.append(data)
     
 
@@ -57,7 +61,8 @@ def main():
     
     #   # Server address and port
     server_address = (args.remote, args.port) if args.remote else ('localhost', args.port)
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket = NumpySocket()
     
     client = UHD_Client(client_socket)
 

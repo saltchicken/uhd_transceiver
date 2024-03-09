@@ -9,6 +9,8 @@ from loguru import logger
 
 from IPython import embed
 
+from numpysocket import NumpySocket
+
 
 class Transceiver():
     def __init__(self, args):
@@ -85,14 +87,18 @@ class RX_Node(threading.Thread):
         threading.Thread.__init__(self)
         self.receiver = receiver
         self.kill_rx = threading.Event()
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind(('0.0.0.0', receiver.rx_port)) if receiver.remote else self.server_socket.bind(('localhost', receiver.rx_port))
-        self.server_socket.listen(1)
+        # self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # self.server_socket.bind(('0.0.0.0', receiver.rx_port)) if receiver.remote else self.server_socket.bind(('localhost', receiver.rx_port))
+        # self.server_socket.listen(1)
+        
+        self.server_socket = NumpySocket()
+        self.server_socket.bind(('0.0.0.0', receiver.rx_port))
+        self.server_socket.listen()
 
         logger.info("Waiting for a connection...")
-        self.conn, addr = self.server_socket.accept()
-        logger.info("Connected to:", addr)
+        self.conn, self.addr = self.server_socket.accept()
+        logger.info("Connected to:", self.addr)
     
     def run(self):
         """Send continuous stream of data."""
@@ -103,14 +109,15 @@ class RX_Node(threading.Thread):
         stream_cmd.stream_now = True
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
         total_sent = 0
-        test_result = []
+        # test_result = []
         # self.conn.setblocking(False)
         while not self.kill_rx.is_set():
             data = self.receiver.read()
-            test_result.append(data)
-            data_bytes = data.tobytes()
-            self.conn.sendall(data_bytes)
-            total_sent += len(data_bytes)
+            self.conn.sendall(data)
+            # test_result.append(data)
+            # data_bytes = data.tobytes()
+            # self.conn.sendall(data_bytes)
+            # total_sent += len(data_bytes)
 
         logger.debug(f"Total sent: {total_sent}")
         stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.stop_cont)
@@ -118,8 +125,8 @@ class RX_Node(threading.Thread):
         self.conn.close()
         self.server_socket.close()
         
-        test = np.concatenate(test_result)
-        test.tofile('test3.bin')
+        # test = np.concatenate(test_result)
+        # test.tofile('test3.bin')
         logger.debug('Conn and socket closed')
     
     def stop(self):
