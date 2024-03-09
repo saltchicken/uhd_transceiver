@@ -44,6 +44,7 @@ class UHD_Client():
             logger.debug(f"Total Received: {total_received}")
             self.sock.close()
             result = np.concatenate(self.segment)
+            result.tofile('final.bin')
             
     def data_handler(self, data):
         # data = np.frombuffer(data_bytes, dtype=np.complex64)
