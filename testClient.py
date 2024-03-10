@@ -39,7 +39,7 @@ class SaveToFile(Handler):
         result.tofile("received_samples.bin")
         logger.debug(f"{len(result)} samples writtien to received_samples.bin")
         
-class Plotter(Handler):
+class LinePlotter(Handler):
     def __init__(self):
         self.segment = []
         
@@ -54,7 +54,28 @@ class Plotter(Handler):
         plt.plot(result)
         plt.show()
         
-
+class FFTPlotter(Handler):
+    def __init__(self):
+        self.segment = []
+        
+    def handler(self, data: np.ndarray):
+        self.segment.append(data)
+        
+    def save(self):
+        result = np.concatenate(self.segment)
+        import matplotlib.pyplot as plt
+        plt.style.use('dark_background')
+        
+        fft_result = np.fft.fft(result)
+        fft_result = np.fft.fftshift(fft_result)
+        fft_result = np.abs(fft_result)
+        
+        # TODO: How do I pass the sample_rate to here. Do we bring back the Segment class?
+        freq_bins = np.fft.fftshift(np.fft.fftfreq(len(result))) * 2_000_000 // 1000 # khz
+        
+        plt.plot(freq_bins, fft_result)
+        plt.show()
+        
 # class Animation(Handler):
 #     def __init__(self):
 #         import matplotlib.pyplot as plt
@@ -122,7 +143,8 @@ def main():
     
     
     # handler = SaveToFile()
-    handler = Plotter()
+    # handler = LinePlotter()
+    handler = FFTPlotter()
     client = UHD_Client(args.remote, args.port)
     client.receive_data(handler)
     # embed()
