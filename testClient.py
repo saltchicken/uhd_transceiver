@@ -104,8 +104,9 @@ class FFTPlotter(Handler):
 
 # TODO: Figure out what this should return on loop end
 class UHD_Client():
-    def __init__(self, remote, port):
-        self.server_address = (remote, port) if remote else ('localhost', port)
+    def __init__(self, remote, port, sample_rate):
+        self.server_address = (remote, port) if remote else ('localhost', port) 
+        self.sample_rate = sample_rate
         
     def receive_data(self, handler: Handler):
         """Receive continuous stream of data."""
@@ -145,7 +146,7 @@ def main():
     # handler = SaveToFile()
     # handler = LinePlotter()
     handler = FFTPlotter()
-    client = UHD_Client(args.remote, args.port)
+    client = UHD_Client(args.remote, args.port, 2e6)
     client.receive_data(handler)
     # embed()
 
