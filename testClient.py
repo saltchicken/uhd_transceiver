@@ -38,7 +38,48 @@ class SaveToFile(Handler):
         result = np.concatenate(self.segment)
         result.tofile("received_samples.bin")
         logger.debug(f"{len(result)} samples writtien to received_samples.bin")
+        
+class Plotter(Handler):
+    def __init__(self):
+        self.segment = []
+        
+    def handler(self, data: np.ndarray):
+        self.segment.append(data)
+        
+    def save(self):
+        result = np.concatenate(self.segment)
+        import matplotlib.pyplot as plt
+        plt.style.use('dark_background')
+        logger.info(f"Showing a segment with length of {result.shape}")
+        plt.plot(result)
+        plt.show()
+        
 
+# class Animation(Handler):
+#     def __init__(self):
+#         import matplotlib.pyplot as plt
+#         from matplotlib.animation import FuncAnimation
+#         self.fig, self.ax = plt.subplots()
+        
+#         self.data = np.zeros(64000, dtype=np.complex64)
+#         self.line, = self.ax.plot(self.data)
+        
+#         def update(frame, line, data):
+#             print('updating')
+#             line.set_ydata(data)
+#             return line,
+        
+#         self.ani = FuncAnimation(self.fig, update, interval=100, fargs=(self.line, self.data))
+        
+#         plt.show()
+                
+#     def handler(self, data: np.ndarray):
+#         self.data = data
+#         print('handling')
+#         self.ani.event_source.start()
+        
+#     def save(self):
+#         pass
 
 # TODO: Figure out what this should return on loop end
 class UHD_Client():
@@ -80,7 +121,8 @@ def main():
     logger.add(sys.stderr, level="DEBUG") if args.verbose else logger.add(sys.stderr, level="INFO")
     
     
-    handler = SaveToFile()
+    # handler = SaveToFile()
+    handler = Plotter()
     client = UHD_Client(args.remote, args.port)
     client.receive_data(handler)
     # embed()
