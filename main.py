@@ -1,8 +1,8 @@
-import argparse
+import argparse, configparser
 import socket
 import threading
 import numpy as np
-import sys
+import sys, os
 
 import uhd
 from loguru import logger
@@ -136,25 +136,39 @@ class RX_Node(threading.Thread):
         self.kill_rx.set()
         
 def main():
-    parser = argparse.ArgumentParser(description="Arguments for running setting up UHD device.")
-    parser.add_argument('--tx_sample_rate', type=float, required=True, help="Sample rate for TX (Hz). Example: 2e6")
-    parser.add_argument('--tx_center_freq', type=float, required=True, help="Center frequency for TX (Hz). Example: 434e6")
-    parser.add_argument('--tx_channel_freq', type=float, required=True, help="Channel frequency for transmitter. Offset from center (Hz). Example: 25000")
-    # parser.add_argument('--tx_antenna', type=str, required=True, help="")
-    parser.add_argument('--tx_gain', type=int, required=True, help="Gain for TX. Example: 10")
-    
-    parser.add_argument('--rx_sample_rate', type=float, required=True, help="Sample rate for RX (Hz). Example: 2e6")
-    parser.add_argument('--rx_center_freq', type=float, required=True, help="Center frequency for receiver (Hz). Example: 434e6")
-    parser.add_argument('--rx_channel_freq', type=float, required=True, help="Channel frequency for receiver. Offset from center (Hz). Example: 40000")
-    # parser.add_argument('--rx_antenna', type=str, required=True, help="")
-    parser.add_argument('--rx_gain', type=int, required=True, help="Gain for RX. Example: 20")
-    parser.add_argument('--verbose', '-v', action='store_true', help="Enable verbose mode")
-    parser.add_argument('--remote', '-r', action='store_true', help="Enable remote access")
-    parser.add_argument('--rx_port', type=int, default=12345, help="Server port for RX Node")
-    args = parser.parse_args()
+    def parse_arguments():
+        parser = argparse.ArgumentParser(description="Arguments for running setting up UHD device.")
+        parser.add_argument('--tx_sample_rate', type=float, required=True, help="Sample rate for TX (Hz). Example: 2e6")
+        parser.add_argument('--tx_center_freq', type=float, required=True, help="Center frequency for TX (Hz). Example: 434e6")
+        parser.add_argument('--tx_channel_freq', type=float, required=True, help="Channel frequency for transmitter. Offset from center (Hz). Example: 25000")
+        # parser.add_argument('--tx_antenna', type=str, required=True, help="")
+        parser.add_argument('--tx_gain', type=int, required=True, help="Gain for TX. Example: 10")
+        
+        parser.add_argument('--rx_sample_rate', type=float, required=True, help="Sample rate for RX (Hz). Example: 2e6")
+        parser.add_argument('--rx_center_freq', type=float, required=True, help="Center frequency for receiver (Hz). Example: 434e6")
+        parser.add_argument('--rx_channel_freq', type=float, required=True, help="Channel frequency for receiver. Offset from center (Hz). Example: 40000")
+        # parser.add_argument('--rx_antenna', type=str, required=True, help="")
+        parser.add_argument('--rx_gain', type=int, required=True, help="Gain for RX. Example: 20")
+        parser.add_argument('--verbose', '-v', action='store_true', help="Enable verbose mode")
+        parser.add_argument('--remote', '-r', action='store_true', help="Enable remote access")
+        parser.add_argument('--rx_port', type=int, default=12345, help="Server port for RX Node")
+        args = parser.parse_args()
+        return args
 
-    logger.remove()
-    logger.add(sys.stderr, level="DEBUG") if args.verbose else logger.add(sys.stderr, level="INFO")
+    def load_config(profile: str = None):
+        if not profile:
+            profile = "DEFAULT"
+        config = configparser.ConfigParser()
+        if os.path.exists("config.ini"):
+            config.read("config.ini")
+            return config
+        else:
+            return None
+
+    if not load_config("DEFAULT"):
+        args = parse_arguments()
+        logger.remove()
+        logger.add(sys.stderr, level="DEBUG") if args.verbose else logger.add(sys.stderr, level="INFO")
     
     transceiver = Transceiver(args)
     embed(quiet=True)
