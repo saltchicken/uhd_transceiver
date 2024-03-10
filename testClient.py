@@ -132,6 +132,36 @@ class UHD_Client():
                 handler.save()
     
 
+class ClientGenerator():
+    def __init__(self, remote, port, sample_rate):
+        self.server_address = (remote, port) if remote else ('localhost', port) 
+        self.sample_rate = sample_rate
+        
+    
+    def __enter__(self):
+        logger.debug('Connecting to numpy socket')
+        self.sock = NumpySocket()
+        try:
+            self.sock.connect(self.server_address)
+        except ConnectionRefusedError:
+            logger.warning("Connection refused. Make sure the server is running.")
+            del self.sock
+            return None
+        return self
+    
+    def __exit__(self, *args, **kwargs):
+        logger.debug("Exiting ClientGenerator")
+        self.sock.close()
+        
+    def next(self):
+        data = self.sock.recv()
+        if len(data) == 0:
+            logger.error('Fatal error with receiving data')
+            return None
+        else:
+            return data
+
+
 def main():
     parser = argparse.ArgumentParser(description="Arguments for setting up client of UHD_Transceiver")
     parser.add_argument('--remote', type=str, default='', help="Remote address of UHD_Transceiver server")
@@ -145,10 +175,11 @@ def main():
     
     # handler = SaveToFile()
     # handler = LinePlotter()
-    handler = FFTPlotter()
-    client = UHD_Client(args.remote, args.port, 2e6)
-    client.receive_data(handler)
-    # embed()
+    # handler = FFTPlotter()
+    # client = UHD_Client(args.remote, args.port, 2e6)
+    # client.receive_data(handler)
+    with ClientGenerator(args.remote, args.port, 2e6) as client:
+        embed()
 
     
 
