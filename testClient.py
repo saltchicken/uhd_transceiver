@@ -160,6 +160,37 @@ class ClientGenerator():
             return None
         else:
             return data
+        
+class Animation():
+    def __init__(self, client_generator):
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import FuncAnimation
+        
+        self.client = client_generator
+        if not self.client:
+            return None
+        init_data = np.zeros(64000, dtype=np.complex64)
+        self.fig, self.ax = plt.subplots()
+        self.ax.set_xlim(0, 10)
+        self.ax.set_ylim(-1,2)
+        self.line, = self.ax.plot(init_data)
+        
+        
+        
+        # def init():
+        #     print('init Animation')
+        #     return self.line,
+            
+        def update(frame):
+            data = self.client.next()
+            print(data)
+            self.line.set_ydata(data)
+            return self.line,
+        
+        self.ani = FuncAnimation(self.fig, update, blit=True, interval=0)
+        
+        plt.show()
+    
 
 
 def main():

@@ -111,7 +111,7 @@ class RX_Node(threading.Thread):
         # stream_cmd.time_spec = uhd.types.TimeSpec(self.usrp.get_time_now().get_real_secs() + INIT_DELAY)
         stream_cmd.stream_now = True
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
-        sent_packets = []
+        # sent_packets = []
         
         while not self.kill_rx.is_set():
             data = self.receiver.read()
@@ -120,7 +120,7 @@ class RX_Node(threading.Thread):
             except ConnectionResetError:
                 logger.warning('Connection reset by client')
                 break
-            sent_packets.append(np.copy(data))
+            # sent_packets.append(np.copy(data))
         
         stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.stop_cont)
         self.receiver.rx_streamer.issue_stream_cmd(stream_cmd)
@@ -128,10 +128,10 @@ class RX_Node(threading.Thread):
         self.server_socket.close()
         logger.debug('Conn and socket closed')
         
-        sent_samples = np.concatenate(sent_packets)
-        logger.debug(f"Total sent: {len(sent_samples)}")
-        sent_samples.tofile('sent_samples.bin')
-        logger.debug(f"{len(sent_samples)} written to sent_samples.bin")
+        # sent_samples = np.concatenate(sent_packets)
+        # logger.debug(f"Total sent: {len(sent_samples)}")
+        # sent_samples.tofile('sent_samples.bin')
+        # logger.debug(f"{len(sent_samples)} written to sent_samples.bin")
         
     
     def stop(self):
