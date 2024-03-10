@@ -139,7 +139,7 @@ class RX_Node(threading.Thread):
         
 def main():
     
-    parser = configargparse.ArgParser(default_config_files=['default.ini'])
+    parser = configargparse.ArgParser(default_config_files=['conf/server/default.ini'])
     # p.add('-c', '--my-config', is_config_file=True, help='config file path')
     # TODO: Add specific choices for sample_rate
     parser.add('--tx_sample_rate', type=float, required=True, help="Sample rate for TX (Hz). Example: 2e6")
