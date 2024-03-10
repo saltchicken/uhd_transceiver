@@ -8,14 +8,28 @@ from loguru import logger
 
 from numpysocket import NumpySocket
 
+from IPython import embed
+
+class HandlerPLT():
+    def __init__(self):
+        self.segment = []
+    
+    def handler(self, data: np.ndarray):
+        self.segment.append(data)
+        
+    def save(self):
+        result = np.concatenate(self.segment)
+        result.tofile("received_samples.bin")
+        logger.debug(f"{len(result)} samples writtien to received_samples.bin")
 
 class UHD_Client():
-    def __init__(self, remote, port):
+    def __init__(self, remote, port, handler):
         self.server_address = (remote, port) if remote else ('localhost', port)
         self.segment = []
-        self.receive_data()
+        self.receive_data(handler)
         
-    def receive_data(self):
+        # TODO: Make Handler base class and add for static typing
+    def receive_data(self, handler):
         """Receive continuous stream of data."""
         
         with NumpySocket() as sock:
@@ -23,23 +37,21 @@ class UHD_Client():
                 sock.connect(self.server_address)
             except ConnectionRefusedError:
                 logger.warning("Connection refused. Make sure the server is running.")
+                return
             try:
                 while True:
                     data = sock.recv()
                     if len(data) == 0:
                         logger.warning(f"data returned with len 0. Breaking receive loop")
                         break
-                    self.data_handler(data)
+                    handler.handler(data)
             except RuntimeError as e:
                 print(e)
             except KeyboardInterrupt:
                 logger.warning("Client interrupted. Exiting...")
             finally:
-                result = np.concatenate(self.segment)
-                result.tofile("received_samples.bin")
-                logger.debug(f"{len(result)} samples writtien to received_samples.bin")
-        
-        logger.debug('Socket closed')
+                handler.save()
+                
             
     def data_handler(self, data):
         self.segment.append(data)
@@ -56,8 +68,9 @@ def main():
     logger.add(sys.stderr, level="DEBUG") if args.verbose else logger.add(sys.stderr, level="INFO")
     
     
-    
-    client = UHD_Client(args.remote, args.port)
+    handler = HandlerPLT()
+    client = UHD_Client(args.remote, args.port, handler)
+    embed()
 
     
 
