@@ -1,5 +1,4 @@
 import argparse
-import socket
 import sys
 import time
 import numpy as np
@@ -7,8 +6,6 @@ import numpy as np
 from loguru import logger
 
 from numpysocket import NumpySocket
-
-from abc import ABC, abstractmethod
 
 from IPython import embed
 
@@ -20,17 +17,8 @@ plt.style.use('dark_background')
 class SampleGenerator(NumpySocket):
     def __init__(self, addr):
         super().__init__()
-        self.addr = addr
-        
-    def __enter__(self):
-        # super().__enter__()
-        self.connect(self.addr)
-        return self
-    
-    # def __exit__(self, *args, **kwargs):
-    #     # super().__exit__()
-    #     logger.debug('Exiting SampleGenerator')
-        
+        self.connect(addr)
+                
     def next(self):
         data = self.recv()
         if len(data) == 0:

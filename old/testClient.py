@@ -136,32 +136,9 @@ class UHD_Client():
                 handler.save()
     
 
-class SampleGenerator(NumpySocket):
-    def __init__(self, addr):
-        super().__init__()
-        self.addr = addr
-        
-    def __enter__(self):
-        # super().__enter__()
-        self.connect(self.addr)
-        return self
-    
-    def __exit__(self, *args, **kwargs):
-        # super().__exit__()
-        logger.debug('Exiting SampleGenerator')
-        
-    def next(self):
-        data = self.recv()
-        if len(data) == 0:
-            logger.error('Fatal error with receiving data')
-            return None
-        else:
-            return data
-
-
 class ClientGenerator():
-    def __init__(self, remote, port, sample_rate):
-        self.server_address = (remote, port) if remote else ('localhost', port) 
+    def __init__(self, addr, sample_rate):
+        self.server_address = addr
         self.sample_rate = sample_rate
         
     
@@ -248,17 +225,11 @@ def main():
     # handler = FFTPlotter()
     # client = UHD_Client(args.remote, args.port, 2e6)
     # client.receive_data(handler)
-    # with ClientGenerator(args.remote, args.port, 2e6) as client:
-    #     with Animation(client) as animation:
-    #         # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
-    #         embed()
-
-    with SampleGenerator(server_addr) as client:
+    with ClientGenerator(server_addr, 2e6) as client:
         with Animation(client) as animation:
             # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
-            animation.show()
-            time.sleep(0.2)
-            # embed()
+            embed()
+
     
 
 
