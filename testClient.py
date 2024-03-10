@@ -12,6 +12,11 @@ from abc import ABC, abstractmethod
 
 from IPython import embed
 
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+plt.style.use('dark_background')
+
 class Handler(ABC):
     @abstractmethod
     def handler(self, data: np.ndarray):
@@ -63,8 +68,7 @@ class FFTPlotter(Handler):
         
     def save(self):
         result = np.concatenate(self.segment)
-        import matplotlib.pyplot as plt
-        plt.style.use('dark_background')
+        
         
         fft_result = np.fft.fft(result)
         fft_result = np.fft.fftshift(fft_result)
@@ -163,33 +167,40 @@ class ClientGenerator():
         
 class Animation():
     def __init__(self, client_generator):
-        import matplotlib.pyplot as plt
-        from matplotlib.animation import FuncAnimation
+        
         
         self.client = client_generator
+        
+    def __enter__(self):
+        
         if not self.client:
             return None
         init_data = np.zeros(64000, dtype=np.complex64)
         self.fig, self.ax = plt.subplots()
-        self.ax.set_xlim(0, 10)
-        self.ax.set_ylim(-1,2)
+        self.ax.set_xlim(0, 64000)
+        self.ax.set_ylim(-0.1,0.1)
         self.line, = self.ax.plot(init_data)
         
-        
-        
-        # def init():
-        #     print('init Animation')
-        #     return self.line,
-            
         def update(frame):
+            toc = time.perf_counter()
             data = self.client.next()
-            print(data)
+            if data is None:
+                logger.debug("Breaking from animation") 
+                self.ani.event_source.stop()
+                plt.close()
             self.line.set_ydata(data)
+            logger.debug(f"Update takes this much time: {time.perf_counter() - toc}")
             return self.line,
         
         self.ani = FuncAnimation(self.fig, update, blit=True, interval=0)
-        
         plt.show()
+        
+        return self
+    
+    def __exit__(self, *args, **kwargs):
+        logger.debug('Exiting Animation')
+        
+        
     
 
 
@@ -210,7 +221,8 @@ def main():
     # client = UHD_Client(args.remote, args.port, 2e6)
     # client.receive_data(handler)
     with ClientGenerator(args.remote, args.port, 2e6) as client:
-        embed()
+        with Animation(client) as animation:
+            embed()
 
     
 
