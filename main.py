@@ -154,7 +154,7 @@ def main():
     # parser.add_argument('--rx_antenna', type=str, help="")
     parser.add('--rx_gain', type=int, help="Gain for RX. Example: 20")
     parser.add('--verbose', '-v', action='store_true', help="Enable verbose mode")
-    parser.add_('--remote', '-r', action='store_true', help="Enable remote access")
+    parser.add('--remote', '-r', action='store_true', help="Enable remote access")
     parser.add('--rx_port', type=int, default=12345, help="Server port for RX Node")
 
     args = parser.parse_args()
