@@ -144,7 +144,7 @@ def main():
     # TODO: Add specific choices for sample_rate
     parser.add('--tx_sample_rate', type=float, required=True, help="Sample rate for TX (Hz). Example: 2e6")
     parser.add('--tx_center_freq', type=float, required=True, help="Center frequency for TX (Hz). Example: 434e6")
-    parser.add('--tx_channel_freq', type=float, required=True,, help="Channel frequency for transmitter. Offset from center (Hz). Example: 25000")
+    parser.add('--tx_channel_freq', type=float, required=True, help="Channel frequency for transmitter. Offset from center (Hz). Example: 25000")
     # parser.add_argument('--tx_antenna', type=str, help="")
     parser.add('--tx_gain', type=int, required=True, help="Gain for TX. Example: 10")
     
