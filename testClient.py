@@ -8,9 +8,26 @@ from loguru import logger
 
 from numpysocket import NumpySocket
 
+from abc import ABC, abstractmethod
+
 from IPython import embed
 
-class HandlerPLT():
+class Handler(ABC):
+    @abstractmethod
+    def handler(self, data: np.ndarray):
+        """
+        Handle incoming streaming from Client receive_data
+        """
+        pass
+    
+    @abstractmethod
+    def save(self):
+        """
+        Run this function after stream has been ended
+        """
+        pass
+    
+class SaveToFile(Handler):
     def __init__(self):
         self.segment = []
     
@@ -22,14 +39,13 @@ class HandlerPLT():
         result.tofile("received_samples.bin")
         logger.debug(f"{len(result)} samples writtien to received_samples.bin")
 
+
+# TODO: Figure out what this should return on loop end
 class UHD_Client():
-    def __init__(self, remote, port, handler):
+    def __init__(self, remote, port):
         self.server_address = (remote, port) if remote else ('localhost', port)
-        self.segment = []
-        self.receive_data(handler)
         
-        # TODO: Make Handler base class and add for static typing
-    def receive_data(self, handler):
+    def receive_data(self, handler: Handler):
         """Receive continuous stream of data."""
         
         with NumpySocket() as sock:
@@ -51,10 +67,6 @@ class UHD_Client():
                 logger.warning("Client interrupted. Exiting...")
             finally:
                 handler.save()
-                
-            
-    def data_handler(self, data):
-        self.segment.append(data)
     
 
 def main():
@@ -68,9 +80,10 @@ def main():
     logger.add(sys.stderr, level="DEBUG") if args.verbose else logger.add(sys.stderr, level="INFO")
     
     
-    handler = HandlerPLT()
-    client = UHD_Client(args.remote, args.port, handler)
-    embed()
+    handler = SaveToFile()
+    client = UHD_Client(args.remote, args.port)
+    client.receive_data(handler)
+    # embed()
 
     
 
