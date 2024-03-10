@@ -101,7 +101,7 @@ class RX_Node(threading.Thread):
 
         logger.info("Waiting for a connection...")
         self.conn, self.addr = self.server_socket.accept()
-        logger.info("Connected to:", self.addr)
+        logger.info(f"Connected to: {self.addr}")
     
     def run(self):
         """Send continuous stream of data."""
