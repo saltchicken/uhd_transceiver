@@ -80,6 +80,9 @@ class Transceiver():
                 self.rx_node.join()
         except KeyboardInterrupt as e:
             logger.info("Keyboard interrupt hit")
+            self.rx_node.kill_rx.set()
+            self.rx_node.join()
+            
     
     def stop_rx_node(self):
         self.rx_node.stop()
