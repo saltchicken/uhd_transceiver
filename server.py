@@ -80,11 +80,8 @@ class Transceiver():
                 self.rx_node.join()
         except KeyboardInterrupt as e:
             logger.info("Keyboard interrupt hit")
-            if self.rx_node:
-                self.rx_node.stop()
-                self.rx_node.join()
-            else:
-                
+            self.rx_node.stop()
+            self.rx_node.join()
             
     
     def stop_rx_node(self):
@@ -110,19 +107,17 @@ class RX_Node(threading.Thread):
         # self.server_socket.bind(('0.0.0.0', receiver.rx_port)) if receiver.remote else self.server_socket.bind(('localhost', receiver.rx_port))
         # self.server_socket.listen(1)
         
-        
-    
-    def run(self):
-        """Send continuous stream of data."""
-        
         self.server_socket = NumpySocket()
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind(('0.0.0.0', self.receiver.rx_port))
+        self.server_socket.bind(('0.0.0.0', receiver.rx_port))
         self.server_socket.listen()
 
         logger.info("Waiting for a connection...")
         self.conn, self.addr = self.server_socket.accept()
         logger.info(f"Connected to: {self.addr}")
+    
+    def run(self):
+        """Send continuous stream of data."""
         
         stream_cmd = uhd.types.StreamCMD(uhd.types.StreamMode.start_cont)
         # INIT_DELAY = 0.05
