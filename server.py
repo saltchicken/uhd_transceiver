@@ -133,6 +133,12 @@ class RX_Node(threading.Thread):
         # sent_samples.tofile('sent_samples.bin')
         # logger.debug(f"{len(sent_samples)} written to sent_samples.bin")
         
+    def run_forever(self):
+        try:
+            while True:
+                self.run()
+        except KeyboardInterrupt as e:
+            logger.info("Keyboard interrupt hit")
     
     def stop(self):
         self.kill_rx.set()
