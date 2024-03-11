@@ -1,0 +1,6 @@
+
+ConfigArgParse==1.7
+loguru==0.7.2
+matplotlib==3.5.1
+numpy==1.26.4
+numpysocket==1.0.1

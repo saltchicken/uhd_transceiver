@@ -38,12 +38,15 @@ class FileSaver():
                 break
             else:
                 self.segment.append(data)
+        self.save()
+           
+    def __exit__(self, *args, **kwargs):
+        logger.debug('Exiting FileSaver')
+        
+    def save(self):
         result = np.concatenate(self.segment)
         result.tofile('received_samples.bin')
         logger.info(f"Saved: {len(result)} samples to received_samples.bin")
-        
-    def __exit__(self):
-        logger.debug('Exiting FileSaver')
         
             
     
@@ -65,8 +68,7 @@ class Animation():
             toc = time.perf_counter()
             data = self.client.next()
             if len(data) == 0:
-                logger.error('Fatal error with receiving data')
-                logger.debug("Breaking from animation") 
+                logger.error('Fatal error with receiving data, breaking from animation (Server probably closed)')
                 self.ani.event_source.stop()
                 plt.close()
                 return self.line,
