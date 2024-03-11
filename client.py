@@ -22,6 +22,31 @@ class SampleGenerator(NumpySocket):
     def next(self):
         # TODO: Does this need to make a copy
         return self.recv()
+    
+class FileSaver():
+    def __init__(self, client_generator):
+        self.client = client_generator
+        self.segment = []
+        
+    def __enter__(self):
+        if not self.client:
+            return None
+        while True:
+            data = self.client.next()
+            if len(data) == 0:
+                logger.error("Nothing returned. Needs to close")
+                break
+            else:
+                self.segment.append(data)
+        result = np.concatenate(self.segment)
+        result.tofile('received_samples.bin')
+        logger.info(f"Saved: {len(result)} samples to received_samples.bin")
+        
+    def __exit__(self):
+        logger.debug('Exiting FileSaver')
+        
+            
+    
         
 class Animation():
     def __init__(self, client_generator):
@@ -72,12 +97,18 @@ def main():
     
     server_addr = (args.remote, args.port) if args.remote else ('localhost', args.port) 
     
+    # with SampleGenerator(server_addr) as client:
+    #     with Animation(client) as animation:
+    #         # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
+    #         animation.show()
+    #         time.sleep(0.2)
+    #         # embed()
+    
+    
     with SampleGenerator(server_addr) as client:
-        with Animation(client) as animation:
+        with FileSaver(client) as animation:
             # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
-            animation.show()
-            time.sleep(0.2)
-            # embed()
+            embed()
     
 if __name__ == "__main__":
     main()
