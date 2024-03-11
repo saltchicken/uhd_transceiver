@@ -114,6 +114,7 @@ class RX_Node(threading.Thread):
         self.server_socket.listen()
 
         logger.info("Waiting for a connection...")
+        # TODO: Propagate KeyboardException to break the accept loop
         self.conn, self.addr = self.server_socket.accept()
         logger.info(f"Connected to: {self.addr}")
     
