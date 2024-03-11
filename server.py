@@ -79,7 +79,8 @@ class Transceiver():
                 self.rx_node.start()
                 self.rx_node.join()
         except KeyboardInterrupt as e:
-            logger.info("Keyboard interrupt hit")
+            # TODO: This needs to be fixed. rx_node is not terminating. Hanging on connect
+            logger.info("Keyboard interrupt hit. This needs to be fixed. rx_node is not terminating. Hanging on connect")
             self.rx_node.stop()
             self.rx_node.join()
             
