@@ -76,6 +76,7 @@ class Transceiver():
         try:
             while True:
                 self.rx_node.start()
+                self.rx_node.join()
         except KeyboardInterrupt as e:
             logger.info("Keyboard interrupt hit")
     
