@@ -70,6 +70,14 @@ class Transceiver():
     def start_rx_node(self):
         self.rx_node = RX_Node(self)
         self.rx_node.start()
+        
+    def start_rx_node_forever(self):
+        self.rx_node = RX_Node(self)
+        try:
+            while True:
+                self.rx_node.start()
+        except KeyboardInterrupt as e:
+            logger.info("Keyboard interrupt hit")
     
     def stop_rx_node(self):
         self.rx_node.stop()
@@ -132,13 +140,6 @@ class RX_Node(threading.Thread):
         # logger.debug(f"Total sent: {len(sent_samples)}")
         # sent_samples.tofile('sent_samples.bin')
         # logger.debug(f"{len(sent_samples)} written to sent_samples.bin")
-        
-    def run_forever(self):
-        try:
-            while True:
-                self.run()
-        except KeyboardInterrupt as e:
-            logger.info("Keyboard interrupt hit")
     
     def stop(self):
         self.kill_rx.set()
