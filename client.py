@@ -20,12 +20,8 @@ class SampleGenerator(NumpySocket):
         self.connect(addr)
                 
     def next(self):
-        data = self.recv()
-        if len(data) == 0:
-            logger.error('Fatal error with receiving data')
-            return None
-        else:
-            return data
+        # TODO: Does this need to make a copy
+        return self.recv()
         
 class Animation():
     def __init__(self, client_generator):
@@ -43,13 +39,16 @@ class Animation():
         def update(frame):
             toc = time.perf_counter()
             data = self.client.next()
-            if data is None:
+            if len(data) == 0:
+                logger.error('Fatal error with receiving data')
                 logger.debug("Breaking from animation") 
                 self.ani.event_source.stop()
                 plt.close()
-            self.line.set_ydata(data)
-            logger.debug(f"Update takes this much time: {time.perf_counter() - toc}")
-            return self.line,
+                return self.line,
+            else:
+                self.line.set_ydata(data)
+                logger.debug(f"Update takes this much time: {time.perf_counter() - toc}")
+                return self.line,
         
         self.ani = FuncAnimation(self.fig, update, blit=True, interval=0)  
         return self
