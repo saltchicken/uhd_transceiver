@@ -75,9 +75,9 @@ class Transceiver():
         try:
             while True:
                 # TODO: Is creation of new thread inefficient. Can we reuse the same thread.
-                with RX_Node(self) as node:
-                    node.start()
-                    node.join()
+                self.rx_node = RX_Node(self)
+                self.rx_node.start()
+                self.rx_node.join()
         except KeyboardInterrupt as e:
             logger.info("Keyboard interrupt hit")
             self.rx_node.stop()
