@@ -82,6 +82,7 @@ class Transceiver():
             logger.info("Keyboard interrupt hit")
             self.rx_node.stop()
             self.rx_node.join()
+            del self.rx_node
 
                 
             
