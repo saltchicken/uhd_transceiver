@@ -2,6 +2,7 @@ import argparse
 import sys
 import time
 import numpy as np
+from functools import partial
 
 from loguru import logger
 
@@ -224,7 +225,43 @@ class SignalFinder_OLD():
     def __exit__(self, *args, **kwargs):
         logger.debug('Exiting SignalFinder')
     
+class Sampler(NumpySocket):
+    def __init__(self, addr):
+        super().__init__()
+        self.connect(addr)
         
+    def next(self):
+        return self.recv()
+    
+    # TODO: Add static typing for func Callable
+    def loop(self):
+        try:
+            while True:
+                data = self.next()
+                if len(data) == 0:
+                    logger.error("Nothing returned. Needs to close")
+                    break
+                else:
+                    logger.debug("Running loop_func")
+                    self.loop_func(data)
+        except KeyboardInterrupt as e:
+            pass
+        finally:
+            self.exit_func() 
+        
+    def loop_func(self, data):
+        pass
+    
+    def exit_func(self):
+        logger.debug("Leaving Sampler")
+    
+class SignalFinderLoopFunc(Sampler):
+    def __init__(self, addr):
+        super().__init__(addr)
+        
+    def loop_func(self, data):
+        print('hello')
+    
 class SignalFinder(SampleGenerator):
     def __init__(self, addr):
         super().__init__(addr)
@@ -294,9 +331,9 @@ def main():
     #         time.sleep(0.2)
     #         # embed()
     
-    with SignalFinder(server_addr) as client:
-        # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
-        time.sleep(0.2)
-            
+    # with SignalFinder(server_addr) as client:
+    #     # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
+    #     time.sleep(0.2)
+    embed()        
 if __name__ == "__main__":
     main()
