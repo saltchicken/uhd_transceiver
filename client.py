@@ -36,7 +36,6 @@ class Sampler(NumpySocket):
                     logger.error("Nothing returned. Needs to close")
                     break
                 else:
-                    logger.debug("Running loop_func")
                     self.loop_func(data)
         except KeyboardInterrupt as e:
             pass
@@ -56,7 +55,8 @@ class SignalFinder(Sampler):
         super().__init__(addr)
         
     def loop_func(self, data):
-        print('hello')
+        if contains_signal(data, 0.004):
+            logger.debug('Signal found')
         
 def main():
     parser = argparse.ArgumentParser(description="Arguments for setting up client of UHD_Transceiver")
@@ -72,6 +72,6 @@ def main():
     
     signal_finder = SignalFinder(server_addr)
     signal_finder.loop()
-    embed()        
+    time.sleep(0.2)      
 if __name__ == "__main__":
     main()
