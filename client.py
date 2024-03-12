@@ -14,6 +14,11 @@ from matplotlib.animation import FuncAnimation
 plt.style.use('dark_background')
 
 
+def contains_signal(data, threshold):
+        # squared_magnitudes = np.square(data).real
+        # return np.sum(squared_magnitudes > threshold)
+        return np.sum(data > threshold)
+    
 class SampleGenerator(NumpySocket):
     def __init__(self, addr):
         super().__init__()
@@ -195,7 +200,54 @@ class Animation():
         
     def show(self):
         plt.show()
-             
+
+class SignalFinder_OLD():
+    def __init__(self, client_generator):
+        self.client = client_generator
+        # self.segment = []
+    
+    def __enter__(self):
+        if not self.client:
+            return None
+        try:
+            while True:
+                data = self.client.next()
+                if len(data) == 0:
+                    logger.error("Nothing returned. Needs to close")
+                    break
+                else:
+                    if contains_signal(data, 0.004):
+                        logger.debug('Contains signal')
+        except KeyboardInterrupt as e:
+            pass         
+    
+    def __exit__(self, *args, **kwargs):
+        logger.debug('Exiting SignalFinder')
+    
+        
+class SignalFinder(SampleGenerator):
+    def __init__(self, addr):
+        super().__init__(addr)
+        if self is None:
+            logger.error("This actually happened")
+            return None
+    
+    def __enter__(self):
+        try:
+            while True:
+                data = self.next()
+                if len(data) == 0:
+                    logger.error("Nothing returned. Needs to close")
+                    break
+                else:
+                    if contains_signal(data, 0.004):
+                        logger.debug('Contains signal')
+        except KeyboardInterrupt as e:
+            pass   
+    
+    def __exit__(self, *args, **kwargs):
+        logger.debug('Exiting SignalFinderGenerator')    
+                 
 def main():
     parser = argparse.ArgumentParser(description="Arguments for setting up client of UHD_Transceiver")
     parser.add_argument('--remote', type=str, default='', help="Remote address of UHD_Transceiver server")
@@ -228,12 +280,23 @@ def main():
     #         time.sleep(0.2)
     #         # embed()
     
-    with SampleGenerator(server_addr) as client:
-        with WaterfallAnimation(client) as animation:
-            # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
-            animation.show()
-            time.sleep(0.2)
-            # embed()
+    # with SampleGenerator(server_addr) as client:
+    #     with WaterfallAnimation(client) as animation:
+    #         # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
+    #         animation.show()
+    #         time.sleep(0.2)
+    #         # embed()
     
+    # with SampleGenerator(server_addr) as client:
+    #     with SignalFinder(client) as animation:
+    #         # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
+    #         # animation.show()
+    #         time.sleep(0.2)
+    #         # embed()
+    
+    with SignalFinder(server_addr) as client:
+        # TODO: This allows the script to run a little longer so the cleanup can happen. Add something like join to make sure all threads are complete.
+        time.sleep(0.2)
+            
 if __name__ == "__main__":
     main()
