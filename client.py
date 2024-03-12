@@ -59,9 +59,11 @@ class WaterfallAnimation():
         fft_size = 1024
         waterfall_data = np.zeros((iterations, fft_size))
         
+        plt.rcParams['toolbar'] = 'None'
         fig, ax = plt.subplots()
         fig.set_size_inches(8, 10)
-        plt.rcParams['toolbar'] = 'None'
+        
+        
         
         im = ax.imshow(waterfall_data, cmap='viridis', vmin=-0.1, vmax=3.0)
         
