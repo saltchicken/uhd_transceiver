@@ -11,8 +11,8 @@ from IPython import embed
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-
 plt.style.use('dark_background')
+
 
 class SampleGenerator(NumpySocket):
     def __init__(self, addr):
@@ -48,7 +48,6 @@ class FileSaver():
         result.tofile('received_samples.bin')
         logger.info(f"Saved: {len(result)} samples to received_samples.bin")
         
-
 class WaterfallAnimation():
     def __init__(self, client_generator):
         self.client = client_generator
@@ -106,7 +105,6 @@ class WaterfallAnimation():
     def show(self):
         plt.show()
 
-    
 class FFTAnimation():
     def __init__(self, client_generator):
         self.client = client_generator
@@ -180,8 +178,7 @@ class Animation():
         
     def show(self):
         plt.show()
-        
-        
+             
 def main():
     parser = argparse.ArgumentParser(description="Arguments for setting up client of UHD_Transceiver")
     parser.add_argument('--remote', type=str, default='', help="Remote address of UHD_Transceiver server")
