@@ -55,8 +55,8 @@ class WaterfallAnimation():
     def __enter__(self):
         if not self.client:
             return None
-        iterations = 500
-        fft_size = 1024
+        iterations = 200
+        fft_size = 512
         waterfall_data = np.zeros((iterations, fft_size))
         
         plt.rcParams['toolbar'] = 'None'
@@ -78,8 +78,16 @@ class WaterfallAnimation():
         ax.set_title('Waterfall Plot')
         fig.colorbar(im, label='Amplitude')
         
+        ##### Performance tracking
+        self.frame_toc = time.perf_counter()
+        ##### frame is duration of updating FuncAninamation after update returns
+        
         def update(frame):
-            toc = time.perf_counter()
+            ##### Performance tracking
+            frame_tic =time.perf_counter() - self.frame_toc
+            update_toc = time.perf_counter()
+            #####
+            
             data = self.client.next()
             if len(data) == 0:
                 logger.error('Fatal error with receiving data, breaking from animation (Server probably closed)')
@@ -94,8 +102,15 @@ class WaterfallAnimation():
                 
                 im.set_array(waterfall_data)
                 im.set_extent([-freq_range, freq_range, 0, time_domain])
-
-                logger.debug(f"Update takes this much time: {time.perf_counter() - toc}")
+                
+                ##### Performance tracking
+                update_tic = time.perf_counter() - update_toc
+                logger.debug(f"Update time: { '{:.5f}'.format(update_tic)} | Frame time: { '{:.5f}'.format(frame_tic)}")
+                if update_tic + frame_tic > 0.034:
+                    logger.warning(f"FuncAnimation taking longer than 34ms (0.034) to update. May have issues with accuracy.")
+                self.frame_toc = time.perf_counter()
+                #####
+                
                 return im,
             
         self.ani = FuncAnimation(fig, update, blit=True, interval=0)  
