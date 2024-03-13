@@ -21,8 +21,7 @@ def contains_signal(data, threshold):
 class Sampler(NumpySocket):
     def __init__(self, addr):
         super().__init__()
-        self.addr = addr
-        self.connect(self.addr)
+        self.connect(addr)
         
     def next(self):
         return self.recv()
@@ -42,12 +41,12 @@ class Sampler(NumpySocket):
         except ValueError as e:
             logger.error("Connection needs to be restarted")
         
-        self.exit_func() 
+        self.loop_exit() 
         
     def loop_func(self, data):
         pass
     
-    def exit_func(self):
+    def loop_exit(self):
         logger.debug("Exiting Sampler loop")
         
 class SignalFinder(Sampler):
@@ -57,6 +56,75 @@ class SignalFinder(Sampler):
     def loop_func(self, data):
         if contains_signal(data, 0.004):
             logger.debug('Signal found')
+
+class Animator(NumpySocket):
+    def __init__(self, addr):
+        super().__init__()
+        self.connect(addr)
+    
+    def next(self):
+        return self.recv()
+    
+    def loop(self):
+        self.loop_init()
+        plt.show()
+            
+        self.loop_exit()
+            
+    def loop_init(self):
+        pass
+
+    def loop_func(self, frame):
+        pass
+    
+    def loop_exit(self):
+        logger.debug("Exiting Animator loop")
+        
+class Waterfall(Animator):
+    def __init__(self, addr):
+        super().__init__(addr)
+        
+    def loop_init(self):
+        iterations = 200
+        self.fft_size = 512
+        self.waterfall_data = np.zeros((iterations, self.fft_size))
+        
+        plt.rcParams['toolbar'] = 'None'
+        self.fig, self.ax = plt.subplots()
+        self.fig.set_size_inches(8, 10)
+        
+        self.im = self.ax.imshow(self.waterfall_data, cmap='viridis', vmin=-0.1, vmax=3.0)
+        
+        sample_rate = 2000000
+        self.freq_range = sample_rate / 2000 # Half sample_rate and convert to kHz
+        # time_domain = buffer_size * iterations * decimator / sample_rate
+        self.time_domain = 64000 * iterations / sample_rate
+        plt.imshow(self.waterfall_data, extent=[-self.freq_range, self.freq_range, 0, self.time_domain], aspect='auto')
+        
+        self.ax.set_xlabel('Frequency (kHz)')
+        self.ax.set_ylabel('Time (s)')
+        self.ax.set_title('Waterfall Plot')
+        self.fig.colorbar(self.im, label='Amplitude')
+        
+        self.ani = FuncAnimation(self.fig, self.loop_func, blit=True, interval=0)
+        
+    def loop_func(self, frame):
+        data = self.next()
+        if len(data) == 0:
+            logger.error('Fatal error with receiving data, breaking from animation (Server probably closed)')
+            self.ani.event_source.stop()
+            plt.close()
+            return self.im,
+        else:
+            freq_domain = np.fft.fftshift(np.fft.fft(data, n=self.fft_size))
+            max_magnitude_index = np.abs(freq_domain)
+            self.waterfall_data[1:, :] = self.waterfall_data[:-1, :]
+            self.waterfall_data[0, :] = max_magnitude_index
+            
+            self.im.set_array(self.waterfall_data)
+            self.im.set_extent([-self.freq_range, self.freq_range, 0, self.time_domain])
+            
+        return self.im,
         
 def main():
     parser = argparse.ArgumentParser(description="Arguments for setting up client of UHD_Transceiver")
@@ -70,8 +138,14 @@ def main():
     
     server_addr = (args.remote, args.port) if args.remote else ('localhost', args.port) 
     
-    signal_finder = SignalFinder(server_addr)
-    signal_finder.loop()
-    time.sleep(0.2)      
+    # signal_finder = SignalFinder(server_addr)
+    # signal_finder.loop()
+    # time.sleep(0.2)  
+    
+    waterfall = Waterfall(server_addr)
+    waterfall.loop()
+    time.sleep(0.2)
+    
+        
 if __name__ == "__main__":
     main()
