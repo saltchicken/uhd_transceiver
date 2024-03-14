@@ -125,6 +125,31 @@ class Waterfall(Animator):
             self.im.set_extent([-self.freq_range, self.freq_range, 0, self.time_domain])
             
         return self.im,
+
+class Linegraph(Animator):
+    def __init__(self, addr):
+        super().__init__(addr)
+        
+    def loop_init(self):
+        init_data = np.zeros(64000, dtype=np.complex64)
+        self.fig, self.ax = plt.subplots()
+        self.ax.set_xlim(0, 64000)
+        self.ax.set_ylim(-0.1,0.1)
+        self.line, = self.ax.plot(init_data)
+        
+        self.ani = FuncAnimation(self.fig, self.loop_func, blit=True, interval=0)
+        
+    def loop_func(self, frame):
+        data = self.next()
+        if len(data) == 0:
+            logger.error('Fatal error with receiving data, breaking from animation (Server probably closed)')
+            self.ani.event_source.stop()
+            plt.close()
+            return self.line,
+        else:
+            self.line.set_ydata(data)
+            return self.line,
+    
         
 def main():
     parser = argparse.ArgumentParser(description="Arguments for setting up client of UHD_Transceiver")
@@ -142,8 +167,12 @@ def main():
     # signal_finder.loop()
     # time.sleep(0.2)  
     
-    waterfall = Waterfall(server_addr)
-    waterfall.loop()
+    # waterfall = Waterfall(server_addr)
+    # waterfall.loop()
+    # time.sleep(0.2)
+    
+    linegraph = Linegraph(server_addr)
+    linegraph.loop()
     time.sleep(0.2)
     
         
