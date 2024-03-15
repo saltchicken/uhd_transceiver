@@ -10,6 +10,7 @@ from IPython import embed
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from matplotlib.widgets import Slider
 plt.style.use('dark_background')
 
 
@@ -149,6 +150,45 @@ class Linegraph(Animator):
         else:
             self.line.set_ydata(data)
             return self.line,
+        
+class LinegraphSignalFinder(Animator):
+    def __init__(self, addr):
+        super().__init__(addr)
+        
+    def loop_init(self):
+        init_data = np.zeros(64000, dtype=np.complex64)
+        self.fig, self.ax = plt.subplots()
+        plt.subplots_adjust(bottom=0.25)
+        self.ax.set_xlim(0, 64000)
+        self.ax.set_ylim(-0.1,0.1)
+        self.line, = self.ax.plot(init_data)
+        
+        def on_slider_change(val):
+            self.threshold = val
+        
+        self.threshold_line = self.ax.axhline(y=0.025, color='r', linestyle='--', label='Horizontal Line')
+        self.threshold = 0.0
+        self.slider_ax = plt.axes([0.125, 0.1, 0.8, 0.05])
+        self.slider = Slider(self.slider_ax, 'Threshold', 0.0, 0.1, valinit=self.threshold)
+        self.slider.on_changed(on_slider_change)
+        
+        self.ani = FuncAnimation(self.fig, self.loop_func, blit=True, interval=0)
+        
+    def loop_func(self, frame):
+        data = self.next()
+        if len(data) == 0:
+            logger.error('Fatal error with receiving data, breaking from animation (Server probably closed)')
+            self.ani.event_source.stop()
+            plt.close()
+            return self.line,
+        else:
+            self.line.set_ydata(data)
+            self.threshold_line.set_ydata(self.threshold)
+            if contains_signal(data, self.threshold):
+                print('Found signal', end="\r")
+            else:
+                print('No signal     ', end="\r")
+            return self.line, self.threshold_line
     
         
 def main():
@@ -171,10 +211,13 @@ def main():
     # waterfall.loop()
     # time.sleep(0.2)
     
-    linegraph = Linegraph(server_addr)
+    # linegraph = Linegraph(server_addr)
+    # linegraph.loop()
+    # time.sleep(0.2)
+    
+    linegraph = LinegraphSignalFinder(server_addr)
     linegraph.loop()
     time.sleep(0.2)
-    
         
 if __name__ == "__main__":
     main()
