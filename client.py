@@ -13,6 +13,8 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Slider
 plt.style.use('dark_background')
 
+from timer_gen import timer_gen
+
 
 def contains_signal(data, threshold):
         # squared_magnitudes = np.square(data).real
@@ -174,8 +176,11 @@ class LinegraphSignalFinder(Animator):
         
         self.ani = FuncAnimation(self.fig, self.loop_func, blit=True, interval=0)
         
+        self.timer = timer_gen()
+        
     def loop_func(self, frame):
         data = self.next()
+        print(next(self.timer))
         if len(data) == 0:
             logger.error('Fatal error with receiving data, breaking from animation (Server probably closed)')
             self.ani.event_source.stop()
@@ -189,6 +194,7 @@ class LinegraphSignalFinder(Animator):
             else:
                 print('No signal     ', end="\r")
             return self.line, self.threshold_line
+        
     
         
 def main():
@@ -218,6 +224,7 @@ def main():
     linegraph = LinegraphSignalFinder(server_addr)
     linegraph.loop()
     time.sleep(0.2)
+
         
 if __name__ == "__main__":
     main()
